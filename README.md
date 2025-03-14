@@ -1,6 +1,6 @@
 # Akita Meshtastic Delivery Navigator
 
-This project provides a system for delivery and dispatch using Meshtastic, enabling real-time tracking and management of delivery units.
+This Akita Engineering project provides a system for delivery and dispatch using Meshtastic, enabling real-time tracking and management of delivery units.
 
 ## Features
 
