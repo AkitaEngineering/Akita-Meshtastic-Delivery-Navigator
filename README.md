@@ -1,105 +1,106 @@
 # Akita Meshtastic Delivery Navigator
+# Copyright (C) 2025 Akita Engineering <http://www.akitaengineering.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version. See the LICENSE file for details.
 
 This Akita Engineering project provides a system for delivery and dispatch using Meshtastic, enabling real-time tracking and management of delivery units.
 
+**NOTE:** This code requires configuration, testing, and potentially further refinement for production use.
+
 ## Features
 
-* **Delivery Management:**
-    * Create and assign deliveries with address geocoding.
-    * Track delivery status (assigned, arrived, completed).
-    * Assign delivery units to specific deliveries.
-* **Real-Time Tracking:**
-    * Monitor unit locations on a map in real-time.
-    * Track delivery progress and arrival.
-    * Track return to base.
-* **Meshtastic Integration:**
-    * Uses Meshtastic for communication between the dispatch server and delivery units.
-    * Efficient channel management with a channel pool.
-* **Navigation Assistance:**
-    * Provides basic navigation cues (distance to destination) to delivery units.
-    * Display delivery locations on a map.
-* **Database Storage:**
-    * Stores delivery and unit information in an SQLite database.
+* **Delivery Management:** Create deliveries via web UI, geocode addresses automatically.
+* **Status Tracking:** Track deliveries through stages: `pending`, `assigned`, `en_route`, `arrived`, `completed`, `failed` with state validation.
+* **Unit Assignment:** Assign deliveries to idle units via web UI modal.
+* **Real-Time Tracking:** Monitor unit locations and statuses on an interactive map (Leaflet.js) with timestamps indicating data freshness.
+* **Meshtastic Integration:** Uses JSON messages over Meshtastic. Includes ACK/Retry for critical assignment messages stored persistently.
+* **Refined Unit Logic:** Hybrid approach - units auto-detect arrival, dispatcher manually confirms completion via UI, triggering unit return/idle state.
+* **Database Storage:** Stores delivery, unit, status, and pending ACK information in an SQLite database (WAL mode enabled).
+* **Web UI/UX:** Improved interface using Pico.css and custom styles, featuring tables, client-side sorting/filtering, modals, and non-blocking notifications.
+* **Web Security:** Basic user authentication implemented using Flask-Login (requires secure password/secret key setup).
+* **Scalability Features:** Includes persistent ACKs and decoupled incoming message processing via a queue to improve resilience and responsiveness.
 
 ## Requirements
 
-* **Python 3.6+**
-* **Meshtastic Devices**
-* **GPS Module (for delivery units)**
-* **Python Libraries:**
-    * `meshtastic`
-    * `flask`
-    * `geocoder`
-    * `pyserial`
-    * `gpsd-clients`
+* Python 3.7+
+* Meshtastic Devices (Configured with desired channel settings)
+* GPS Module (for delivery units) + `gpsd` service running
+* Python Libraries (see `requirements.txt`)
+* Network access for the Dispatch Server (Web UI, Geocoding)
+* A securely generated `FLASK_SECRET_KEY`.
+* A securely generated *hashed* password for the admin user.
+
+## Project Structure
+
+(See structure diagram provided in previous responses or infer from file list)
 
 ## Installation
 
-1.  **Clone the repository:**
+1.  **Clone:** `git clone <repository_url>` & `cd Akita-Meshtastic-Delivery-Navigator`
+2.  **Virtual Env:** `python -m venv venv` & `source venv/bin/activate` (or `venv\Scripts\activate` on Windows)
+3.  **Dependencies:** `pip install -r requirements.txt`
+4.  **Hardware Setup:** Configure Meshtastic radios (see Security section below). Setup and verify `gpsd`. Note your unit Node IDs.
 
-    ```bash
-    git clone <repository_url>
-    cd <repository_directory>
-    ```
+## Configuration (CRITICAL)
 
-2.  **Install Python dependencies:**
-
-    ```bash
-    pip install meshtastic flask geocoder pyserial gpsd-clients
-    ```
-
-3.  **Ensure Meshtastic Setup:**
-
-    * Connect your Meshtastic devices.
-    * Verify Meshtastic communication is working.
-    * Ensure gpsd is installed and running on the delivery unit devices.
+1.  **Edit `config.py`:**
+    * **`FLASK_SECRET_KEY`:** Generate a strong random key (e.g., `python -c "import secrets; print(secrets.token_hex(32))"`) and set its value. **Store securely!**
+    * **`ADMIN_USERS`:**
+        * Choose a strong password for the 'admin' user.
+        * Generate its hash: Run `python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('YOUR_CHOSEN_PASSWORD'))"` in your activated venv.
+        * Replace the placeholder `password_hash` value in `config.py` with the generated hash string (starts with `pbkdf2:sha256...`).
+    * Set `RETURN_BASE_COORDS` to your actual base location (Default: Port Colborne, ON).
+    * Update `MESHTASTIC_TARGET_NODE_IDS` with the *actual* Meshtastic Node IDs (e.g., `!aabbccdd`) of your delivery units.
+    * Configure `MESHTASTIC_CONNECTION_TYPE`, `MESHTASTIC_DEVICE_PATH` / `MESHTASTIC_TCP_HOST`/`PORT` for the dispatch radio.
+    * Configure `UNIT_MESHTASTIC_CONNECTION_TYPE` / `_DEVICE_PATH` / `_TCP_HOST` / `_TCP_PORT` (often same as dispatch if using serial).
+    * Review other settings (timeouts, intervals, geocoder).
+2.  **Edit `delivery_unit.py`:**
+    * Set the `DELIVERY_UNIT_ID` variable near the top to a unique, *human-readable* identifier for *each* physical unit (e.g., "Truck-01", "Bike-A").
 
 ## Usage
 
-1.  **Run the Dispatch Server:**
-
+1.  **Run Dispatch Server:**
     ```bash
     python dispatch_server.py
     ```
+    * Access the web UI at `http://<server_ip>:<WEB_SERVER_PORT>` (Default: `http://<your_ip>:5000`).
+    * Login using the username (`admin`) and the **plain-text password** you chose (the one you hashed for the config).
+2.  **Run Delivery Unit:**
+    * Ensure `gpsd` is running and has a fix.
+    * Ensure `DELIVERY_UNIT_ID` is set correctly in the script.
+    * Run on the unit hardware:
+        ```bash
+        python delivery_unit.py
+        ```
 
-2.  **Run the Delivery Unit:**
+## Security Considerations
 
-    ```bash
-    python delivery_unit.py
-    ```
+* **Web Authentication:** Default credentials (`admin`/`password`) **MUST BE CHANGED** via hashing in `config.py`. The Flask `SECRET_KEY` **MUST BE SET SECURELY**. Implement proper user management and password policies for production. Consider HTTPS.
+* **Meshtastic Channel Encryption (Highly Recommended):** Configure your Meshtastic devices (Dispatch & Units) to use an **encrypted channel with a strong Pre-Shared Key (PSK)** using Meshtastic tools (Web UI, CLI, app). This application *does not* handle the PSK; it relies on the device's configuration. **Do not transmit sensitive data over unencrypted channels.**
 
-    * Run this script on the device carried by the delivery person.
-    * Ensure gpsd is running on this device.
+## Scalability Considerations
 
-3.  **Access the Web Interface:**
+* **Current Features:** Persistent ACKs (DB), Decoupled Message Input (Queue), DB WAL Mode, Basic Retries.
+* **Future Enhancements:** For very large scale, consider migrating to Celery/RabbitMQ, PostgreSQL, Asyncio architecture, or multiple Meshtastic gateways. Optimize API calls (pagination) and consider WebSockets for UI updates.
 
-    * Open a web browser and go to `http://<server_ip>:5000`.
-    * Create deliveries, assign units, and monitor progress through the web interface.
+## Testing (CRITICAL)
 
-## File Structure
-
-* `dispatch_server.py`: The Flask application for the dispatch server.
-* `delivery_unit.py`: The Python script for the delivery unit.
-* `templates/index.html`: The HTML template for the web interface.
-* `akita_delivery.db`: The SQLite database.
-* `README.md`: This file.
-
-## Configuration
-
-* Modify the return coordinates in `dispatch_server.py` to match your base location.
-* Adjust the channel pool size in `dispatch_server.py` as needed.
-* The webserver runs on port 5000, this can be changed within the dispatch_server.py file.
-* The gps update interval is 30 seconds, this can be changed within the delivery_unit.py file.
-
-## Further Enhancements
-
-* Implement more advanced navigation cues (bearing, turn-by-turn).
-* Add error handling and retry mechanisms for Meshtastic communication.
-* Improve the user interface for both the dispatch server and the delivery unit.
-* Add security features (encryption, authentication).
-* Add better map functionality, such as route planning.
-* Create a Meshtastic plugin for the delivery unit, so that a computer is not required.
+This application requires **extensive testing** across various scenarios before reliable use. Please refer to detailed testing steps outlined in development discussions or create your own comprehensive test plan covering:
+* Startup/Shutdown & Restarts (including ACK timer recovery)
+* Full Delivery Lifecycle (Create, Assign, ACK, En Route, Arrive, Complete Command, Return, Idle)
+* Failure Cases (No ACK, Geocoding Fail, Manual Fail, Unit Offline, GPS Fail, Invalid State Changes)
+* UI Functionality (Login, Filtering, Sorting, Modals, Map Interaction, Notifications, Responsiveness)
+* Multi-Unit Interaction
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues.
+Contributions welcome! Please submit pull requests or open issues. Remember this project is licensed under GPLv3.
+
+## License
+
+This project is licensed under the GNU General Public License, Version 3 (GPLv3). See the [LICENSE](LICENSE) file for the full license text.
+---
+Copyright (c) 2025 Akita Engineering (http://www.akitaengineering.com)
