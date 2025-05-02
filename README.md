@@ -1,10 +1,10 @@
 # Akita Meshtastic Delivery Navigator
-# Copyright (C) 2025 Akita Engineering <http://www.akitaengineering.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version. See the LICENSE file for details.
+ Copyright (C) 2025 Akita Engineering <http://www.akitaengineering.com>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version. See the LICENSE file for details.
 
 This Akita Engineering project provides a system for delivery and dispatch using Meshtastic, enabling real-time tracking and management of delivery units.
 
