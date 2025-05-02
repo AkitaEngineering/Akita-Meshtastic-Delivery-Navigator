@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Akita Delivery Navigator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        /* Minimal styles for login page */
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--background-color); }
+        main { max-width: 420px; width: 100%; padding: 0 1rem;}
+        article { padding: 2em; border-radius: var(--border-radius); box-shadow: var(--card-box-shadow); background-color: var(--card-background-color); }
+        hgroup { margin-bottom: var(--spacing); text-align: center;}
+        h1 { margin-bottom: 0.25rem; }
+        /* Alert styles */
+        .alert { padding: 0.75em 1.25em; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.25rem; }
+        .alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+        .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+        .alert-info { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+        label[for="remember"] { display: block; margin-top: var(--spacing); font-size: var(--font-size-small);}
+        button[type="submit"] { width: 100%; margin-top: var(--spacing);}
+        footer { text-align: center; margin-top: var(--spacing); font-size: var(--font-size-small); color: var(--muted-color);}
+    </style>
+</head>
+<body>
+    <main class="container">
+        <article>
+            <hgroup>
+                <h1>Login</h1>
+                <h2>Akita Delivery Navigator</h2>
+            </hgroup>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}" role="alert">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autocomplete="username">
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+
+                <label for="remember">
+                    <input type="checkbox" id="remember" name="remember">
+                    Remember me
+                </label>
+
+                <button type="submit">Login</button>
+            </form>
+        </article>
+         <footer>
+            <small>Copyright &copy; {{ current_year }} Akita Engineering</small>
+        </footer>
+    </main>
+</body>
+</html>
