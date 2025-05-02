@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.spec
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# Database file
+*.db
+*.sqlite
+*.sqlite3
+akita_delivery.db
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Configuration - uncomment if you store secrets here
+# config.py
+# *.env
+
+# Logs
+*.log
