@@ -1,14 +1,8 @@
 # Akita Meshtastic Delivery Navigator
  Copyright (C) 2025 Akita Engineering <http://www.akitaengineering.com>
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version. See the LICENSE file for details.
-
 This Akita Engineering project provides a system for delivery and dispatch using Meshtastic, enabling real-time tracking and management of delivery units.
 
-**NOTE:** This code requires configuration, testing, and potentially further refinement for production use.
 
 ## Features
 
@@ -39,7 +33,7 @@ This Akita Engineering project provides a system for delivery and dispatch using
 
 ## Installation
 
-1.  **Clone:** `git clone <repository_url>` & `cd Akita-Meshtastic-Delivery-Navigator`
+1.  **Clone:** `git clone https://github.com/AkitaEngineering/Akita-Meshtastic-Delivery-Navigator` & `cd Akita-Meshtastic-Delivery-Navigator`
 2.  **Virtual Env:** `python -m venv venv` & `source venv/bin/activate` (or `venv\Scripts\activate` on Windows)
 3.  **Dependencies:** `pip install -r requirements.txt`
 4.  **Hardware Setup:** Configure Meshtastic radios (see Security section below). Setup and verify `gpsd`. Note your unit Node IDs.
@@ -81,10 +75,6 @@ This Akita Engineering project provides a system for delivery and dispatch using
 * **Web Authentication:** Default credentials (`admin`/`password`) **MUST BE CHANGED** via hashing in `config.py`. The Flask `SECRET_KEY` **MUST BE SET SECURELY**. Implement proper user management and password policies for production. Consider HTTPS.
 * **Meshtastic Channel Encryption (Highly Recommended):** Configure your Meshtastic devices (Dispatch & Units) to use an **encrypted channel with a strong Pre-Shared Key (PSK)** using Meshtastic tools (Web UI, CLI, app). This application *does not* handle the PSK; it relies on the device's configuration. **Do not transmit sensitive data over unencrypted channels.**
 
-## Scalability Considerations
-
-* **Current Features:** Persistent ACKs (DB), Decoupled Message Input (Queue), DB WAL Mode, Basic Retries.
-* **Future Enhancements:** For very large scale, consider migrating to Celery/RabbitMQ, PostgreSQL, Asyncio architecture, or multiple Meshtastic gateways. Optimize API calls (pagination) and consider WebSockets for UI updates.
 
 ## Testing (CRITICAL)
 
@@ -99,8 +89,5 @@ This application requires **extensive testing** across various scenarios before 
 
 Contributions welcome! Please submit pull requests or open issues. Remember this project is licensed under GPLv3.
 
-## License
-
-This project is licensed under the GNU General Public License, Version 3 (GPLv3). See the [LICENSE](LICENSE) file for the full license text.
 ---
 Copyright (c) 2025 Akita Engineering (http://www.akitaengineering.com)
