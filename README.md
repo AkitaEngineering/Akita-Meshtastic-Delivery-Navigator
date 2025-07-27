@@ -1,5 +1,4 @@
 # Akita Meshtastic Delivery Navigator
- Copyright (C) 2025 Akita Engineering <http://www.akitaengineering.com>
 
 This Akita Engineering project provides a system for delivery and dispatch using Meshtastic, enabling real-time tracking and management of delivery units.
 
