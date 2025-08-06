@@ -26,10 +26,6 @@ This Akita Engineering project provides a system for delivery and dispatch using
 * A securely generated `FLASK_SECRET_KEY`.
 * A securely generated *hashed* password for the admin user.
 
-## Project Structure
-
-(See structure diagram provided in previous responses or infer from file list)
-
 ## Installation
 
 1.  **Clone:** `git clone https://github.com/AkitaEngineering/Akita-Meshtastic-Delivery-Navigator` & `cd Akita-Meshtastic-Delivery-Navigator`
@@ -37,7 +33,7 @@ This Akita Engineering project provides a system for delivery and dispatch using
 3.  **Dependencies:** `pip install -r requirements.txt`
 4.  **Hardware Setup:** Configure Meshtastic radios (see Security section below). Setup and verify `gpsd`. Note your unit Node IDs.
 
-## Configuration (CRITICAL)
+## Configuration
 
 1.  **Edit `config.py`:**
     * **`FLASK_SECRET_KEY`:** Generate a strong random key (e.g., `python -c "import secrets; print(secrets.token_hex(32))"`) and set its value. **Store securely!**
@@ -45,7 +41,7 @@ This Akita Engineering project provides a system for delivery and dispatch using
         * Choose a strong password for the 'admin' user.
         * Generate its hash: Run `python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('YOUR_CHOSEN_PASSWORD'))"` in your activated venv.
         * Replace the placeholder `password_hash` value in `config.py` with the generated hash string (starts with `pbkdf2:sha256...`).
-    * Set `RETURN_BASE_COORDS` to your actual base location (Default: Port Colborne, ON).
+    * Set `RETURN_BASE_COORDS` to your actual base location.
     * Update `MESHTASTIC_TARGET_NODE_IDS` with the *actual* Meshtastic Node IDs (e.g., `!aabbccdd`) of your delivery units.
     * Configure `MESHTASTIC_CONNECTION_TYPE`, `MESHTASTIC_DEVICE_PATH` / `MESHTASTIC_TCP_HOST`/`PORT` for the dispatch radio.
     * Configure `UNIT_MESHTASTIC_CONNECTION_TYPE` / `_DEVICE_PATH` / `_TCP_HOST` / `_TCP_PORT` (often same as dispatch if using serial).
