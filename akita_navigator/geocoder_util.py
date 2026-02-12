@@ -24,8 +24,18 @@ def geocode_address(address):
             delay = config.GEOCODER_RETRY_BASE_DELAY_SECONDS * (2 ** attempt) # Exponential backoff (starts at base delay)
             time.sleep(delay)
 
-            g = geocoder.osm(address) # Assuming OSM based on config default
-            # TODO: Add dynamic provider selection based on config.GEOCODER_PROVIDER if needed
+            # Dynamic provider selection based on config.GEOCODER_PROVIDER
+            if config.GEOCODER_PROVIDER == 'osm':
+                g = geocoder.osm(address)
+            elif config.GEOCODER_PROVIDER == 'google':
+                # Requires GEOCODER_API_KEY to be set in config
+                if not hasattr(config, 'GEOCODER_API_KEY') or not config.GEOCODER_API_KEY:
+                    logger.error("Google geocoding requires GEOCODER_API_KEY in config.")
+                    return None, None
+                g = geocoder.google(address, key=config.GEOCODER_API_KEY)
+            else:
+                logger.error(f"Unsupported geocoder provider: {config.GEOCODER_PROVIDER}. Supported: osm, google")
+                return None, None
 
             if g.ok:
                 latitude = g.latlng[0]

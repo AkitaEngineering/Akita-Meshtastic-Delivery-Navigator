@@ -308,7 +308,6 @@ def upsert_unit(unit_id, meshtastic_node_id=None, latitude=None, longitude=None,
 
 def get_unit(unit_id):
     """Retrieves a specific unit by its ID."""
-    # ... (logic remains same) ...
     logger.debug(f"Getting unit ID: {unit_id}")
     try:
         with get_db_connection() as conn:
@@ -323,7 +322,7 @@ def get_unit(unit_id):
 
 def get_all_units():
     """Retrieves all units."""
-    # ... (logic remains same) ...
+    # Return all units in alphabetical order by unit_id
     logger.debug("Getting all units")
     try:
         with get_db_connection() as conn:
@@ -338,7 +337,7 @@ def get_all_units():
 
 def update_unit_location(unit_id, latitude, longitude, location_time):
     """Updates the location and timestamp for a specific unit."""
-    # ... (logic remains same, ensure logger usage) ...
+    # Update unit's last known coordinates and timestamp
     logger.debug(f"Updating location for unit {unit_id}: ({latitude}, {longitude})")
     now = _now_utc_iso()
     sql = ''' UPDATE units
@@ -405,8 +404,96 @@ def update_unit_status(unit_id, new_status, assigned_delivery_id=None, timestamp
         return False, "Unexpected error"
 
 
-# --- Pending ACK Functions (add_pending_ack, get_pending_ack, update_pending_ack_retry, update_pending_ack_status, get_all_pending_acks_for_restart) ---
-# ... (Implementations from previous step are correct) ...
+# --- Pending ACK Functions (add_pending_ack, get_pending_ack, update_pending_ack_retry,
+#     update_pending_ack_status, get_all_pending_acks_for_restart) ---
+def add_pending_ack(msg_id, delivery_id, unit_id, destination_node_id, payload_dict):
+    """Insert a pending assignment ACK record into the DB.
+    payload_dict will be stored as JSON.
+    Returns True on success, False on DB error.
+    """
+    now = _now_utc_iso()
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(''' INSERT OR REPLACE INTO pending_assignment_acks
+                               (msg_id, delivery_id, unit_id, destination_node_id, payload_json, sent_time, retry_count, status, last_update_time)
+                               VALUES (?, ?, ?, ?, ?, ?, 0, 'pending', ?)''',
+                           (msg_id, delivery_id, unit_id, destination_node_id, json.dumps(payload_dict), now, now))
+            conn.commit()
+            return True
+    except sqlite3.Error as e:
+        logger.error(f"DB error adding pending ACK {msg_id}: {e}", exc_info=True)
+        return False
+
+def get_pending_ack(msg_id):
+    """Return pending ACK record as dict (including parsed payload) or None."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM pending_assignment_acks WHERE msg_id = ?", (msg_id,))
+            row = cursor.fetchone()
+            if not row: return None
+            record = dict(row)
+            try:
+                record['payload'] = json.loads(record.get('payload_json') or '{}')
+            except Exception:
+                record['payload'] = None
+            return record
+    except sqlite3.Error as e:
+        logger.error(f"DB error fetching pending ACK {msg_id}: {e}", exc_info=True)
+        return None
+
+def update_pending_ack_retry(msg_id):
+    """Increment retry_count and update sent_time/last_update_time. Returns True on success."""
+    now = _now_utc_iso()
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE pending_assignment_acks SET retry_count = retry_count + 1, sent_time = ?, last_update_time = ? WHERE msg_id = ?", (now, now, msg_id))
+            if cursor.rowcount == 0:
+                return False
+            conn.commit()
+            return True
+    except sqlite3.Error as e:
+        logger.error(f"DB error updating retry for pending ACK {msg_id}: {e}", exc_info=True)
+        return False
+
+def update_pending_ack_status(msg_id, new_status):
+    """Update status field for pending ACKs (e.g., 'acked' or 'failed')."""
+    if new_status not in ('pending', 'acked', 'failed'):
+        logger.error(f"Invalid pending ACK status: {new_status}")
+        return False
+    now = _now_utc_iso()
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE pending_assignment_acks SET status = ?, last_update_time = ? WHERE msg_id = ?", (new_status, now, msg_id))
+            if cursor.rowcount == 0: return False
+            conn.commit()
+            return True
+    except sqlite3.Error as e:
+        logger.error(f"DB error updating status for pending ACK {msg_id}: {e}", exc_info=True)
+        return False
+
+def get_all_pending_acks_for_restart():
+    """Return list of pending ACKs (status == 'pending') for restart processing."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT msg_id, delivery_id, unit_id, destination_node_id, payload_json, sent_time, retry_count FROM pending_assignment_acks WHERE status = 'pending'")
+            rows = cursor.fetchall()
+            results = []
+            for r in rows:
+                rec = dict(r)
+                try:
+                    rec['payload'] = json.loads(rec.get('payload_json') or '{}')
+                except Exception:
+                    rec['payload'] = None
+                results.append({'msg_id': rec['msg_id'], 'delivery_id': rec['delivery_id'], 'unit_id': rec['unit_id'], 'destination_node_id': rec['destination_node_id'], 'payload': rec['payload'], 'sent_time': rec['sent_time'], 'retry_count': rec['retry_count']})
+            return results
+    except sqlite3.Error as e:
+        logger.error(f"DB error fetching pending ACKs for restart: {e}", exc_info=True)
+        return []
 
 # --- Offline Check ---
 def check_and_update_offline_units():
@@ -443,7 +530,7 @@ def check_and_update_offline_units():
 # --- Helper to find active delivery ---
 def get_delivery_by_unit(unit_id):
      """Finds the currently active (non-completed/failed) delivery for a unit."""
-     # ... (Implementation is correct) ...
+    # Return the most recent active delivery assigned to the unit, if any
      logger.debug(f"Getting active delivery for unit {unit_id}")
      try:
          with get_db_connection() as conn:

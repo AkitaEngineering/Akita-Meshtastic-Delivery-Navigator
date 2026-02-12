@@ -15,9 +15,7 @@ from akita_navigator.meshtastic_iface import UnitMeshtasticInterface
 from akita_navigator import gps_handler
 
 # --- Unit Specific Config ---
-# !!! CRITICAL: SET THIS FOR EACH UNIT !!!
 DELIVERY_UNIT_ID = "Unit-Alpha"
-# !!! CRITICAL: SET THIS FOR EACH UNIT !!!
 
 # --- Logging Setup ---
 log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

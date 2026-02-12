@@ -15,14 +15,14 @@ ARRIVAL_PROXIMITY_METERS = 50
 # IMPORTANT: Generate a strong, random secret key for production!
 # Use: python -c "import secrets; print(secrets.token_hex(32))"
 # Store this securely (e.g., environment variable), not directly in committed code if possible.
-FLASK_SECRET_KEY = 'generate_a_real_secret_key_here_and_store_safely'
+FLASK_SECRET_KEY = 'c8a87308b36085290a0bc1d8a0c2b34c0554580a54a4b4d92f13a3ff601f1573'
 
 # Example storing hashed passwords (better in DB or secrets manager)
 # Generate hash using: python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('your_chosen_password'))"
 ADMIN_USERS = {
     'admin': {
         # Replace with the actual generated hash for your chosen password
-        'password_hash': 'pbkdf2:sha256:600000$exampleSalt$exampleHashValue...', # Example Hash - REPLACE THIS
+        'password_hash': 'scrypt:32768:8:1$899AFOsdD52C2o4X$33abfed45d99b84c8b12962a4624fc249b26fcfb4e3d702c2f7938a84a45704467296c0ca44d9a8c9c4353c7f484ff423db77c5e95e3c988382b42b6934872fb', # Example Hash - REPLACE THIS
         'roles': ['admin']
     }
 }

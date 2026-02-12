@@ -49,6 +49,41 @@ This Akita Engineering project provides a system for delivery and dispatch using
 2.  **Edit `delivery_unit.py`:**
     * Set the `DELIVERY_UNIT_ID` variable near the top to a unique, *human-readable* identifier for *each* physical unit (e.g., "Truck-01", "Bike-A").
 
+## Developer Notes
+
+- The codebase now includes full Meshtastic ACK/retry handling and persistent pending-ACK state in the database. Key implementation files:
+    - `akita_navigator/meshtastic_iface.py` — Meshtastic communication, ACK timers, send/receive helpers.
+    - `akita_navigator/database.py` — DB schema and helpers, including pending ACK helpers (`add_pending_ack`, `get_pending_ack`, `update_pending_ack_retry`, `update_pending_ack_status`, `get_all_pending_acks_for_restart`).
+
+- Security: `FLASK_SECRET_KEY` and an example admin password hash were added to `config.py` for convenience during local development; for production, set these via environment variables instead of committing to code.
+
+- Quick static checks you can run locally (Windows):
+
+```powershell
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python scripts\compile_all.py   # Syntax check across .py files
+```
+
+- Quick import smoke-test (after dependencies installed):
+
+```powershell
+python -c "import config, akita_navigator.database, akita_navigator.geocoder_util, akita_navigator.gps_handler, akita_navigator.meshtastic_iface, akita_navigator.web.app, akita_navigator.web.routes; print('Imports OK')"
+```
+
+- To start the dispatch server (example):
+
+```powershell
+venv\Scripts\activate
+python dispatch_server.py
+```
+
+- Notes on external dependencies:
+    - `meshtastic`, `gpsd-py3`, `geocoder` and `pubsub` are required for full runtime. If you only need to run static checks, these can be left uninstalled.
+
+If you want, I can add a small `dev-setup` script to automatically create the venv and install dependencies, or add CI checks for linting and tests.
+
 ## Usage
 
 1.  **Run Dispatch Server:**
